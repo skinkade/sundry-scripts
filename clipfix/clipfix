@@ -1,0 +1,32 @@
+#!/bin/bash
+set -eu
+
+export NY_FILE="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )/clipfix.ny"
+
+
+
+function declip() {
+    local file="$1"
+    local basename="$(basename "$file")"
+    local filename="${basename%.*}"
+
+    local flac="$(pwd)/$filename - declipped.flac"
+    local temp_orig="/tmp/$filename - clipped.wav"
+    local temp_declipped="/tmp/$filename - declipped.wav"
+
+    ffmpeg -i "$file" "$temp_orig" &>/dev/null
+
+    printf "$temp_orig\n$temp_declipped\n" | ny "$NY_FILE" &>/dev/null
+
+    # Read metadata from original and audio data from declipped output
+    ffmpeg -i "$file" -i "$temp_declipped" -map 1 -map_metadata:s:a 0:s:a "$flac" -y &>/dev/null
+
+    rm "$temp_orig" "$temp_declipped"
+    printf "$file\n\t=> $flac\n"
+}
+
+export -f declip
+
+
+
+SHELL=$(type -p bash) parallel declip ::: "$@"
