@@ -16,6 +16,8 @@ function declip() {
 
     ffmpeg -i "$file" "$temp_orig" &>/dev/null
 
+    # Nyquist/XLISP don't seem to have argument parsing,
+    # so we have to do it the dirty way...
     printf "$temp_orig\n$temp_declipped\n" | ny "$NY_FILE" &>/dev/null
 
     # Read metadata from original and audio data from declipped output
